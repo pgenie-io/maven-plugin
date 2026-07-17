@@ -11,7 +11,8 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '11'
+          # e2e certification IT compiles generated code at release 16 (java.gen not yet Java-8-compatible, see java.gen#9); needs JDK >=16 to compile, unlike the plugin build itself (JDK 11)
+          java-version: '21'
           cache: maven
       - run: sudo apt-get update && sudo apt-get install -y libpq5
       - run: mvn -B verify -Pe2e
