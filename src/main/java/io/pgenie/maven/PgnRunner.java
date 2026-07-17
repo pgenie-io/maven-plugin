@@ -7,10 +7,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /** Runs pgn generate in the staging directory, streaming output to the Maven log. */
 final class PgnRunner {
+  private static final long TIMEOUT_MINUTES = 15;
+
   static void generate(
       Path executable,
       Path workingDir,
@@ -49,8 +52,17 @@ final class PgnRunner {
     }
     int exit;
     try {
-      exit = process.waitFor();
+      boolean finished = process.waitFor(TIMEOUT_MINUTES, TimeUnit.MINUTES);
+      if (!finished) {
+        process.destroyForcibly();
+        throw new IOException(
+            "pgn generate did not complete within "
+                + TIMEOUT_MINUTES
+                + " minutes; the process was killed");
+      }
+      exit = process.exitValue();
     } catch (InterruptedException e) {
+      process.destroyForcibly();
       Thread.currentThread().interrupt();
       throw new IOException("Interrupted while waiting for pgn", e);
     }
