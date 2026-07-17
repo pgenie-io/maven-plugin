@@ -65,6 +65,18 @@
       <version>1.27.1</version>
     </dependency>
     <dependency>
+      <!--
+        commons-compress 1.27.1 needs commons-lang3 >= 3.13 (for SystemProperties,
+        ArrayFill etc.), but maven-core/maven-plugin-api pull in 3.8.1 transitively
+        as "provided", and Maven's nearest-wins resolution picks that older version
+        over commons-compress's own (optional) dependency. Pin explicitly here so
+        the newer, compatible version wins.
+      -->
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.17.0</version>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>5.11.4</version>
