@@ -107,7 +107,9 @@ public final class GenerateMojo extends AbstractMojo {
     String freezeYaml = ProjectYaml.freeze(genUrl, genHash);
 
     try {
-      String fingerprint = projectYaml + "\n" + freezeYaml + "\n" + failOnSeqScans;
+      String fingerprint =
+          projectYaml + " " + freezeYaml + " " + Pins.PGN_VERSION + " "
+              + failOnSeqScans + " " + String.valueOf(databaseUrl);
       String digest = Digest.compute(sourceDir, fingerprint);
       boolean upToDate =
           !force
