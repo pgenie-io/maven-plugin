@@ -94,13 +94,14 @@ public final class GenerateMojo extends AbstractMojo {
 
     String effectiveSpace;
     String effectiveName;
+    String version;
     try {
       effectiveSpace = space != null ? space : Sanitizer.name(project.getGroupId());
       effectiveName = name != null ? name : Sanitizer.name(project.getArtifactId());
+      version = Sanitizer.version(project.getVersion());
     } catch (IllegalArgumentException e) {
       throw new MojoFailureException(e.getMessage());
     }
-    String version = Sanitizer.version(project.getVersion());
 
     String projectYaml =
         ProjectYaml.project(effectiveSpace, effectiveName, version, postgres, genUrl, useOptional);
@@ -172,7 +173,11 @@ public final class GenerateMojo extends AbstractMojo {
                 throw new UncheckedIOException(e);
               }
             });
-    return provisioner.provision();
+    try {
+      return provisioner.provision();
+    } catch (UncheckedIOException e) {
+      throw e.getCause();
+    }
   }
 
   private void attachAndCheck(Path stagingDir) throws MojoExecutionException, MojoFailureException {
