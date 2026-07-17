@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.pgenie.it</groupId>
+  <artifactId>certification</artifactId>
+  <version>1.0.0</version>
+
+  <properties>
+    <!--
+      TODO(java.gen#9): java.gen still emits records and text blocks, which require the
+      compiler release to be 16 or higher (text blocks alone would only need 15, but
+      records need 16). Until java.gen#9 lands the Java-8 template downgrade, we certify
+      against 16 instead of the intended 8. Restoring this to 8 is a release blocker —
+      see the known-risk note in task-12-brief.md.
+    -->
+    <maven.compiler.release>16</maven.compiler.release>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.codemine.java.postgresql</groupId>
+      <artifactId>jdbc</artifactId>
+      <version>RELEASE</version><!-- pin to the version the generated pom requires once known -->
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.pgenie</groupId>
+        <artifactId>pgenie-maven-plugin</artifactId>
+        <version>@project.version@</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -133,4 +133,49 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>e2e</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-invoker-plugin</artifactId>
+            <version>3.8.1</version>
+            <executions>
+              <execution>
+                <id>e2e</id>
+                <goals>
+                  <goal>install</goal>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+                <configuration>
+                  <projectsDirectory>src/it-e2e</projectsDirectory>
+                  <cloneProjectsTo>${project.build.directory}/it-e2e</cloneProjectsTo>
+                  <settingsFile>src/it/settings.xml</settingsFile>
+                  <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+                  <postBuildHookScript>verify</postBuildHookScript>
+                  <streamLogs>true</streamLogs>
+                  <!--
+                    The base maven-invoker-plugin declaration above (same plugin GAV) sets a
+                    plugin-level <properties> pointing pgenie.pgnExecutable at the stub script
+                    for the Task 11 stub-based ITs. Plugin-level <configuration> is merged into
+                    every execution of the same plugin, including this one, so without an
+                    explicit override this execution would silently run the stub instead of
+                    the real, network-downloaded pgn — defeating the point of this IT.
+                    combine.self="override" fully replaces the inherited <properties>, wiping
+                    out that stub path so GenerateMojo falls through to its real
+                    download-and-verify path.
+                  -->
+                  <properties combine.self="override"/>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
