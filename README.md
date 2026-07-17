@@ -1,7 +1,89 @@
 # pgenie-maven-plugin
 
-A Maven plugin that runs [pGenie](https://github.com/pgenie-io/pgenie) during your
-build to generate type-safe Java bindings from PostgreSQL migrations and queries,
-attaching them directly to your module's sources.
+Generates typed Java data-access code from your PostgreSQL migrations and
+queries at build time, via [pGenie](https://pgenie.io).
 
-Status: **design phase** — see the [v1 specification](docs/spec.md).
+## Quick start
+
+Put your SQL under `src/main/pgenie/`:
+
+    src/main/pgenie/
+      migrations/   -- schema migrations, applied in lexical order
+      queries/      -- one .sql file per query
+      types/        -- optional custom type definitions
+
+Add to your pom:
+
+    <plugin>
+      <groupId>io.pgenie</groupId>
+      <artifactId>pgenie-maven-plugin</artifactId>
+      <version>1.0.0</version>
+      <executions>
+        <execution>
+          <goals><goal>generate</goal></goals>
+        </execution>
+      </executions>
+    </plugin>
+
+and the runtime dependency:
+
+    <dependency>
+      <groupId>io.codemine.java.postgresql</groupId>
+      <artifactId>jdbc</artifactId>
+      <version><!-- reported by the build if missing --></version>
+    </dependency>
+
+`mvn compile` downloads a pinned, checksum-verified `pgn` binary, runs it
+against a disposable Docker Postgres, and compiles the generated sources as
+part of your module. The build may add `*.sig1.pgn.yaml` signature files
+under `src/main/pgenie/` — commit them.
+
+## Configuration
+
+| Parameter | Default | |
+|---|---|---|
+| `space` | sanitized groupId | pGenie namespace |
+| `name` | sanitized artifactId | pGenie project name |
+| `postgres` | `18` | PostgreSQL major to validate against |
+| `useOptional` | `false` | Use Optional for nullable fields |
+| `gen` / `genSha256` | pinned java.gen | generator override (both required together) |
+| `pgnProjectDirectory` | `src/main/pgenie` | SQL input root |
+| `failOnSeqScans` | `false` | fail the build on sequential scans |
+| `skip` | `false` | skip generation |
+
+Per-machine properties (command line or ~/.m2/settings.xml, not pom):
+
+| Property | |
+|---|---|
+| `-Dpgenie.databaseUrl` | validate against an existing server instead of Docker |
+| `-Dpgenie.reuseContainer` | keep a named container across builds |
+| `-Dpgenie.pgnExecutable` | use a local pgn binary, skip download |
+| `-Dpgenie.force` | ignore the up-to-date check |
+| `-Dpgenie.skip` | skip generation |
+
+Note: with `-Dpgenie.databaseUrl`, schema changes made directly on that
+server are invisible to the up-to-date check — use `-Dpgenie.force` after
+out-of-band schema changes.
+
+## Requirements
+
+Maven 3.6.3+, JDK 11+ for the build. Docker (default mode) or a reachable
+PostgreSQL (`-Dpgenie.databaseUrl`). libpq on the host: `brew install libpq`
+(macOS) / `apt-get install libpq5` (Debian/Ubuntu).
+
+## Releasing (maintainers)
+
+Each release certifies a (plugin, pgn, java.gen) triple pinned in
+`Pins.java`. To release: update pins if needed, run `mvn verify -Pe2e`,
+tag `vX.Y.Z`, push the tag. Requires repo secrets `CENTRAL_USERNAME`,
+`CENTRAL_PASSWORD`, `GPG_PRIVATE_KEY`, `GPG_PASSPHRASE` (create these once,
+as a manual owner step, before the first tag push) — the `release` workflow
+picks up the tag and runs `mvn deploy -Prelease`.
+
+Known gap: the certified triple's generated code currently compiles at
+`maven.compiler.release=16`, not the target Java 8, because java.gen does
+not yet emit Java-8-compatible code (tracked as java.gen#9). The e2e
+certification IT (and its CI job, `e2e.yaml`) runs on JDK 21 to accommodate
+this. Once java.gen#9 lands and a Java-8-compatible `jdbc` runtime is
+released, this should be revisited so the certified triple targets Java 8
+as originally intended.
