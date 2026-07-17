@@ -1,7 +1,6 @@
 package io.pgenie.maven;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,11 +29,7 @@ final class Digest {
         md.update((byte) 0);
         md.update(inputDir.relativize(f).toString().replace('\\', '/').getBytes(StandardCharsets.UTF_8));
         md.update((byte) 0);
-        try {
-          md.update(Files.readAllBytes(f));
-        } catch (IOException e) {
-          throw new UncheckedIOException(e);
-        }
+        md.update(Files.readAllBytes(f));
       }
     }
     StringBuilder hex = new StringBuilder();
