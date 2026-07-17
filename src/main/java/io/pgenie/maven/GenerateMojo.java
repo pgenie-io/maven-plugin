@@ -136,7 +136,10 @@ public final class GenerateMojo extends AbstractMojo {
               + " — commit it to version control");
         }
         Files.createDirectories(pgenieTarget);
-        Files.writeString(digestFile, digest);
+        // Recompute after copy-back: copyBackSignatures may have added/changed files inside
+        // sourceDir (the very directory the digest is computed over), so the pre-run digest
+        // would never again match on a subsequent, otherwise-unchanged build.
+        Files.writeString(digestFile, Digest.compute(sourceDir, fingerprint));
       }
     } catch (IOException e) {
       throw new MojoExecutionException(e.getMessage(), e);
@@ -203,7 +206,8 @@ public final class GenerateMojo extends AbstractMojo {
             project.getArtifacts().stream()
                 .filter(a ->
                     Artifact.SCOPE_COMPILE.equals(a.getScope())
-                        || Artifact.SCOPE_PROVIDED.equals(a.getScope()))
+                        || Artifact.SCOPE_PROVIDED.equals(a.getScope())
+                        || Artifact.SCOPE_SYSTEM.equals(a.getScope()))
                 .map(a -> a.getGroupId() + ":" + a.getArtifactId() + ":" + a.getVersion())
                 .collect(Collectors.toList()),
             requiredVersion);

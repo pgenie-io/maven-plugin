@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.pgenie.it</groupId>
+  <artifactId>happy-path</artifactId>
+  <version>1.2.3-SNAPSHOT</version>
+
+  <properties>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.codemine.java.postgresql</groupId>
+      <artifactId>jdbc</artifactId>
+      <version>1.4.0</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/fake-jdbc.jar</systemPath>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.pgenie</groupId>
+        <artifactId>pgenie-maven-plugin</artifactId>
+        <version>@project.version@</version>
+        <configuration>
+          <useOptional>true</useOptional>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
