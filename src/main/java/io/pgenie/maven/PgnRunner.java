@@ -42,14 +42,24 @@ final class PgnRunner {
             .redirectErrorStream(true)
             .start();
     StringBuilder transcript = new StringBuilder();
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        transcript.append(line).append('\n');
-        logLine.accept(line);
-      }
-    }
+    Thread reader =
+        new Thread(
+            () -> {
+              try (BufferedReader r =
+                  new BufferedReader(
+                      new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = r.readLine()) != null) {
+                  transcript.append(line).append('\n');
+                  logLine.accept(line);
+                }
+              } catch (IOException ignored) {
+                // stream closes when the process is killed after a timeout; nothing more to read
+              }
+            });
+    reader.setDaemon(true);
+    reader.start();
+
     int exit;
     try {
       boolean finished = process.waitFor(TIMEOUT_MINUTES, TimeUnit.MINUTES);
@@ -65,6 +75,14 @@ final class PgnRunner {
       process.destroyForcibly();
       Thread.currentThread().interrupt();
       throw new IOException("Interrupted while waiting for pgn", e);
+    } finally {
+      // Let the reader thread drain any final buffered output after the process exits or is
+      // killed; it is a daemon thread so it can't block JVM shutdown even if join times out.
+      try {
+        reader.join(5000);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
     }
     if (exit != 0) {
       String message = "pgn generate failed with exit code " + exit;

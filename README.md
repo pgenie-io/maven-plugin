@@ -67,9 +67,16 @@ out-of-band schema changes.
 
 ## Requirements
 
-Maven 3.6.3+, JDK 11+ for the build. Docker (default mode) or a reachable
-PostgreSQL (`-Dpgenie.databaseUrl`). libpq on the host: `brew install libpq`
-(macOS) / `apt-get install libpq5` (Debian/Ubuntu).
+Maven 3.6.3+, JDK 11+ to build the plugin itself. Docker (default mode) or a
+reachable PostgreSQL (`-Dpgenie.databaseUrl`). libpq on the host:
+`brew install libpq` (macOS) / `apt-get install libpq5` (Debian/Ubuntu).
+
+**Compiling generated code currently requires JDK 16+.** The certified
+`java.gen` release emits records and text blocks, so consuming modules need
+`maven.compiler.release=16` (or higher) and a JDK ≥16 on the build machine —
+JDK 11 is enough to build the plugin, but not to compile the code it
+generates. This is a known gap (java.gen#9); the plugin will support Java 8
+output once that lands. See "Releasing (maintainers)" below for details.
 
 ## Releasing (maintainers)
 
