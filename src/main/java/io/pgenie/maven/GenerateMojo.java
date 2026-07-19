@@ -97,7 +97,10 @@ public final class GenerateMojo extends AbstractMojo {
 
     Path baseDir = project.getBasedir().toPath();
     Path sourceDir = baseDir.resolve(pgnProjectDirectory);
-    Path pgenieTarget = Path.of(project.getBuild().getDirectory()).resolve("pgenie");
+    // Nested under generated-sources so IDEs (IntelliJ, Eclipse m2e) auto-mark the resulting
+    // artifacts/java/src/main/java as a source root by convention, without executing this Mojo.
+    Path pgenieTarget =
+        Path.of(project.getBuild().getDirectory()).resolve("generated-sources").resolve("pgenie");
     Path stagingDir = pgenieTarget.resolve("staging");
     Path digestFile = pgenieTarget.resolve("digest");
 

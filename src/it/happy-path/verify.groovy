@@ -1,4 +1,4 @@
-File staging = new File(basedir, 'target/pgenie/staging')
+File staging = new File(basedir, 'target/generated-sources/pgenie/staging')
 
 String projectYaml = new File(staging, 'project1.pgn.yaml').text
 assert projectYaml.contains('space: io_pgenie_it')
@@ -23,5 +23,5 @@ assert new File(basedir, 'target/classes/gen/Generated.class').exists()
 assert new File(basedir, 'target/classes/app/Uses.class').exists()
 
 // digest written
-assert new File(basedir, 'target/pgenie/digest').text.length() == 64
+assert new File(basedir, 'target/generated-sources/pgenie/digest').text.length() == 64
 return true
