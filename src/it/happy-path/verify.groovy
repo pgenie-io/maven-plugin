@@ -6,6 +6,8 @@ assert projectYaml.contains('name: happy_path')
 assert projectYaml.contains('version: 1.2.3')
 assert projectYaml.contains('postgres: 18')
 assert projectYaml.contains('useOptional: true')
+assert projectYaml.contains('groupId: io.pgenie.it')
+assert projectYaml.contains('artifactId: happy-path')
 
 String freeze = new File(staging, 'freeze1.pgn.yaml').text
 assert freeze.contains('java.gen') && freeze.contains('sha256:')

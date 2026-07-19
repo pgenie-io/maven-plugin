@@ -38,6 +38,12 @@ against a disposable Docker Postgres, and compiles the generated sources as
 part of your module. The build may add `*.sig1.pgn.yaml` signature files
 under `src/main/pgenie/` — commit them.
 
+Generated code's Java package and Maven coordinates default to this project's
+own `groupId`/`artifactId` (dashes stripped from the artifactId, per Maven
+convention) — e.g. `groupId=com.example`, `artifactId=catalogue-lib` yields
+package `com.example.cataloguelib`. Set `<rootPackage>` to use a package
+independent of your Maven coordinates instead.
+
 ## Configuration
 
 | Parameter | Default | |
@@ -46,6 +52,7 @@ under `src/main/pgenie/` — commit them.
 | `name` | sanitized artifactId | pGenie project name |
 | `postgres` | `18` | PostgreSQL major to validate against |
 | `useOptional` | `false` | Use Optional for nullable fields |
+| `rootPackage` | derived from groupId/artifactId | override the root Java package for generated code |
 | `gen` / `genSha256` | pinned java.gen | generator override (both required together) |
 | `pgnProjectDirectory` | `src/main/pgenie` | SQL input root |
 | `failOnSeqScans` | `false` | fail the build on sequential scans |

@@ -35,6 +35,15 @@ public final class GenerateMojo extends AbstractMojo {
   @Parameter(property = "pgenie.name")
   String name;
 
+  /**
+   * Override of the root Java package for generated code. Defaults to a package
+   * derived from this project's groupId/artifactId (Maven convention, dashes
+   * stripped from artifactId) — set this only when you want a package
+   * independent of your Maven coordinates.
+   */
+  @Parameter
+  String rootPackage;
+
   /** PostgreSQL major version to validate against. */
   @Parameter(defaultValue = "18")
   int postgres;
@@ -104,7 +113,9 @@ public final class GenerateMojo extends AbstractMojo {
     }
 
     String projectYaml =
-        ProjectYaml.project(effectiveSpace, effectiveName, version, postgres, genUrl, useOptional);
+        ProjectYaml.project(
+            effectiveSpace, effectiveName, version, postgres, genUrl, useOptional,
+            project.getGroupId(), project.getArtifactId(), rootPackage);
     String freezeYaml = ProjectYaml.freeze(genUrl, genHash);
 
     try {
