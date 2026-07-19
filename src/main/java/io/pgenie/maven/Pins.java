@@ -22,7 +22,7 @@ final class Pins {
   static final String GEN_URL =
       "https://github.com/pgenie-io/java.gen/releases/download/v1.2.0/resolved.dhall";
   static final String GEN_SHA256 =
-      "77f3ed207f473e4a78e428e0d6179e2136ff91fbf1fb07d632778478132bd885";
+      "0cc4c6c31bfd2513fd6191b7fe7d986af91eea909995e07c1ea97bfd639cdea3";
 
   private Pins() {}
 }

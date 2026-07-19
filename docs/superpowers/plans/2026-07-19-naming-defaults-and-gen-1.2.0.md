@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- `java.gen` v1.2.0 release asset: `https://github.com/pgenie-io/java.gen/releases/download/v1.2.0/resolved.dhall`, sha256 `77f3ed207f473e4a78e428e0d6179e2136ff91fbf1fb07d632778478132bd885` (independently verified by downloading the asset and running `shasum -a 256` — do not trust this value without re-verifying it yourself the same way).
+- `java.gen` v1.2.0 release asset: `https://github.com/pgenie-io/java.gen/releases/download/v1.2.0/resolved.dhall`, Dhall import-integrity hash `sha256:0cc4c6c31bfd2513fd6191b7fe7d986af91eea909995e07c1ea97bfd639cdea3` (independently verified with `dhall hash --file <downloaded-asset>` — **not** a raw-bytes `shasum` of the file; Dhall's integrity check hashes the alpha/beta-normalized CBOR-encoded AST, which differs from the file's byte hash. Confirmed by running `dhall hash` against the existing v1.1.0 pin and matching `Pins.java`'s pre-existing value before trusting the method for v1.2.0. Do not trust this value without re-verifying it yourself the same way.).
 - `GenerateMojo` must always pass `project.getGroupId()` and `project.getArtifactId()` as the generated `Config`'s `groupId`/`artifactId` — raw, unsanitized (these are valid Maven coordinates already; unlike `space`/`name` they are not run through `Sanitizer`).
 - The new `<rootPackage>` pom parameter is optional; when unset, no `rootPackage` line is emitted in the generated YAML (java.gen derives it from `groupId`/`artifactId` on its own).
 - No change to the `space`/`name` parameters or their defaulting (`Sanitizer.name(groupId)` / `Sanitizer.name(artifactId)`) — those remain the pGenie project identity, orthogonal to the new Java package/Maven-coordinate naming.
@@ -355,17 +355,17 @@ to:
   static final String GEN_URL =
       "https://github.com/pgenie-io/java.gen/releases/download/v1.2.0/resolved.dhall";
   static final String GEN_SHA256 =
-      "77f3ed207f473e4a78e428e0d6179e2136ff91fbf1fb07d632778478132bd885";
+      "0cc4c6c31bfd2513fd6191b7fe7d986af91eea909995e07c1ea97bfd639cdea3";
 ```
 
-Independently re-verify this sha256 before committing, the same way the plugin's other pins were verified: download the asset and hash it yourself.
+Independently re-verify this hash before committing, the same way the plugin's other pins were verified: download the asset and hash it with the Dhall CLI, **not** `shasum` — Dhall's import integrity check hashes the semantic (alpha/beta-normalized, CBOR-encoded) form of the expression, not the file's raw bytes, so a plain `shasum -a 256` of the downloaded file gives a different, wrong value (confirm this yourself by comparing `dhall hash` against `shasum` on the existing v1.1.0 asset — `dhall hash` matches the pre-existing `Pins.java` pin; `shasum` does not).
 
 ```bash
 curl -sL https://github.com/pgenie-io/java.gen/releases/download/v1.2.0/resolved.dhall -o /tmp/resolved-v1.2.0.dhall
-shasum -a 256 /tmp/resolved-v1.2.0.dhall
+dhall hash --file /tmp/resolved-v1.2.0.dhall
 ```
 
-Confirm the printed hash matches `77f3ed207f473e4a78e428e0d6179e2136ff91fbf1fb07d632778478132bd885` before proceeding — if it does not match, STOP and escalate rather than committing an unverified pin.
+Confirm the printed hash matches `sha256:0cc4c6c31bfd2513fd6191b7fe7d986af91eea909995e07c1ea97bfd639cdea3` before proceeding — if it does not match, STOP and escalate rather than committing an unverified pin.
 
 - [ ] **Step 2: Run the full test suite and non-e2e ITs**
 
