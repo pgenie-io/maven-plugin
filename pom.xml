@@ -102,7 +102,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-invoker-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>3.10.1</version>
         <configuration>
           <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
           <settingsFile>src/it/settings.xml</settingsFile>
@@ -120,6 +120,13 @@
           </goals>
           <streamLogs>true</streamLogs>
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>5.0.4</version>
+          </dependency>
+        </dependencies>
         <executions>
           <execution>
             <id>integration-test</id>
@@ -142,7 +149,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-invoker-plugin</artifactId>
-            <version>3.8.1</version>
+            <version>3.10.1</version>
             <executions>
               <execution>
                 <id>e2e</id>
