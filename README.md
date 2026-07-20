@@ -72,6 +72,26 @@ Note: with `-Dpgenie.databaseUrl`, schema changes made directly on that
 server are invisible to the up-to-date check — use `-Dpgenie.force` after
 out-of-band schema changes.
 
+## IDE usage (IntelliJ)
+
+Generated sources land under `target/generated-sources/pgenie/staging/artifacts/java/src/main/java`
+— nested under `generated-sources` so IntelliJ (and Eclipse m2e) auto-mark that
+folder as a source root by convention, without needing to run the plugin.
+Two consequences:
+
+- **Fresh checkout:** that directory doesn't exist until the `generate` goal
+  has run at least once, so IntelliJ will report the generated packages as
+  missing right after cloning/opening the project. Run `mvn generate-sources`
+  once, or use the Maven panel's **Generate Sources and Update Folders**,
+  before relying on IDE compilation.
+- **Staying in sync:** IntelliJ's native "Build Project" uses its own
+  compiler and does not re-run Maven plugins, so edits to
+  `src/main/pgenie/**` won't regenerate code until something invokes the
+  Maven build again (the up-to-date digest check makes reruns cheap). To
+  keep generated code in sync automatically, enable **Settings → Build
+  Tools → Maven → Runner → Delegate IDE build/run actions to Maven** so
+  IntelliJ builds via Maven and picks up changes on every build.
+
 ## Requirements
 
 Maven 3.6.3+, JDK 11+ to build the plugin itself. Docker (default mode) or a
