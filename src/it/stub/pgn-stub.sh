@@ -19,6 +19,17 @@ public final class Generated {
 }
 EOF
 
+mkdir -p artifacts/java/src/test/java/gen
+cat > artifacts/java/src/test/java/gen/GeneratedIT.java <<'EOF'
+package gen;
+
+public final class GeneratedIT {
+  public static final String MARKER = "generated-it";
+
+  private GeneratedIT() {}
+}
+EOF
+
 cat > artifacts/java/pom.xml <<'EOF'
 <project>
   <dependencies>

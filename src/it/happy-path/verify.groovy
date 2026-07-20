@@ -30,4 +30,7 @@ File exposed = new File(basedir, 'target/generated-sources/pgenie')
 assert new File(exposed, 'src/main/java').exists()
 assert !new File(exposed, 'staging').exists()
 assert !new File(exposed, 'digest').exists()
+
+// attachTests defaults to false: generated tests are never exposed or attached
+assert !new File(basedir, 'target/generated-test-sources/pgenie').exists()
 return true

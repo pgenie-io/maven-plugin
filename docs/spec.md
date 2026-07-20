@@ -58,13 +58,16 @@ repos, attaching generated tests, injecting dependencies into the consumer's mod
 5. **Copy-back.** New or changed `*.sig1.pgn.yaml` under `queries/` and `types/` are
    copied back into `src/main/pgenie/` — the only source-tree mutation. Docs:
    "the build may add signature files; commit them."
-6. **Expose and attach.** Only the compiled package tree,
+6. **Expose and attach.** The compiled package tree,
    `staging/artifacts/java/src/main/java`, is mirrored into
    `target/generated-sources/pgenie/src/main/java` and attached as a compile source root.
-   The generated `pom.xml` and `src/test/java` stay in staging and are never copied there.
-   Mirroring under `generated-sources` is deliberate: IntelliJ (and Eclipse m2e) auto-mark
-   folders there as generated source roots on sync by convention, without needing to
-   execute this Mojo; `addCompileSourceRoot` registers it explicitly regardless.
+   The generated `pom.xml` stays in staging and is never copied there. Mirroring under
+   `generated-sources` is deliberate: IntelliJ (and Eclipse m2e) auto-mark folders there
+   as generated source roots on sync by convention, without needing to execute this
+   Mojo; `addCompileSourceRoot` registers it explicitly regardless. If `attachTests` is
+   set, `staging/artifacts/java/src/test/java` is likewise mirrored into
+   `target/generated-test-sources/pgenie/src/test/java` and attached with
+   `addTestCompileSourceRoot`; otherwise it stays in staging, unattached.
 7. **Dependency check.** Fail with a copy-pasteable `<dependency>` snippet if
    `io.codemine.java.postgresql:jdbc` is absent from the consumer's compile
    dependencies; warn on version mismatch against the generated pom.
@@ -82,6 +85,7 @@ Pom parameters:
 | `gen` / `genSha256` | baked-in java.gen release; overriding `gen` requires `genSha256` |
 | `pgnProjectDirectory` | `src/main/pgenie` |
 | `failOnSeqScans` | `false` |
+| `attachTests` | `false`; when true, attaches pgn's generated `*IT.java` under `target/generated-test-sources/pgenie/src/test/java` as a test compile source root. The consumer must supply whatever test-scope dependencies those tests need (JUnit Jupiter, rich-pg, etc.) — unvalidated by this plugin. |
 | `skip` | `false` (also `-Dpgenie.skip`) |
 
 Properties-only (per-machine / per-run, never invited into `<configuration>`):

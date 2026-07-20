@@ -56,6 +56,7 @@ independent of your Maven coordinates instead.
 | `gen` / `genSha256` | pinned java.gen | generator override (both required together) |
 | `pgnProjectDirectory` | `src/main/pgenie` | SQL input root |
 | `failOnSeqScans` | `false` | fail the build on sequential scans |
+| `attachTests` | `false` | attach pgn's generated `*IT.java` as test sources — you must add the test-scope dependencies they need (JUnit Jupiter, rich-pg, etc.) yourself |
 | `skip` | `false` | skip generation |
 
 Per-machine properties (command line or ~/.m2/settings.xml, not pom):

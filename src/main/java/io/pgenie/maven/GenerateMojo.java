@@ -66,6 +66,15 @@ public final class GenerateMojo extends AbstractMojo {
   @Parameter(defaultValue = "false")
   boolean failOnSeqScans;
 
+  /**
+   * Attach pgn's generated *IT.java integration tests as test sources. Off by default:
+   * these tests need test-scope dependencies (JUnit Jupiter, rich-pg, etc.) that this
+   * plugin does not add or validate — the consumer must declare them, or the attached
+   * tests will fail to compile.
+   */
+  @Parameter(defaultValue = "false")
+  boolean attachTests;
+
   @Parameter(property = "pgenie.skip", defaultValue = "false")
   boolean skip;
 
@@ -109,6 +118,9 @@ public final class GenerateMojo extends AbstractMojo {
     // without ever running this Mojo. addCompileSourceRoot below registers it explicitly too.
     Path generatedSources =
         targetDir.resolve("generated-sources").resolve("pgenie").resolve("src/main/java");
+    Path stagedTestSources = stagingDir.resolve("artifacts/java/src/test/java");
+    Path generatedTestSources =
+        targetDir.resolve("generated-test-sources").resolve("pgenie").resolve("src/test/java");
 
     String effectiveSpace;
     String effectiveName;
@@ -137,7 +149,8 @@ public final class GenerateMojo extends AbstractMojo {
               && Files.isRegularFile(digestFile)
               && Files.readString(digestFile).equals(digest)
               && Files.isDirectory(stagedJavaSources)
-              && Files.isDirectory(generatedSources);
+              && Files.isDirectory(generatedSources)
+              && (!attachTests || Files.isDirectory(generatedTestSources));
       if (upToDate) {
         getLog().info("pGenie inputs unchanged; skipping generation (-Dpgenie.force to override)");
         if (databaseUrl != null) {
@@ -157,17 +170,26 @@ public final class GenerateMojo extends AbstractMojo {
               + " — commit it to version control");
         }
         Staging.exposeSources(stagedJavaSources, generatedSources);
+        if (attachTests && Files.isDirectory(stagedTestSources)) {
+          Staging.exposeSources(stagedTestSources, generatedTestSources);
+        } else if (attachTests) {
+          getLog().debug("attachTests is set but pgn produced no test sources at " + stagedTestSources);
+        }
         Files.createDirectories(workDir);
         // Recompute after copy-back: copyBackSignatures may have added/changed files inside
         // sourceDir (the very directory the digest is computed over), so the pre-run digest
         // would never again match on a subsequent, otherwise-unchanged build.
         Files.writeString(digestFile, Digest.compute(sourceDir, fingerprint));
       }
+      if (!attachTests) {
+        // Drop any test sources exposed by a prior build where attachTests was enabled.
+        Staging.deleteRecursively(generatedTestSources);
+      }
     } catch (IOException e) {
       throw new MojoExecutionException(e.getMessage(), e);
     }
 
-    attachAndCheck(stagingDir, generatedSources);
+    attachAndCheck(stagingDir, generatedSources, generatedTestSources);
   }
 
   private Path resolveExecutable() throws MojoExecutionException, IOException {
@@ -205,7 +227,7 @@ public final class GenerateMojo extends AbstractMojo {
     }
   }
 
-  private void attachAndCheck(Path stagingDir, Path generatedSources)
+  private void attachAndCheck(Path stagingDir, Path generatedSources, Path generatedTestSources)
       throws MojoExecutionException, MojoFailureException {
     if (!Files.isDirectory(generatedSources)) {
       throw new MojoExecutionException(
@@ -213,6 +235,11 @@ public final class GenerateMojo extends AbstractMojo {
     }
     project.addCompileSourceRoot(generatedSources.toAbsolutePath().toString());
     getLog().info("Attached generated sources: " + generatedSources);
+
+    if (attachTests && Files.isDirectory(generatedTestSources)) {
+      project.addTestCompileSourceRoot(generatedTestSources.toAbsolutePath().toString());
+      getLog().info("Attached generated test sources: " + generatedTestSources);
+    }
 
     String requiredVersion = null;
     Path generatedPom = stagingDir.resolve("artifacts/java/pom.xml");

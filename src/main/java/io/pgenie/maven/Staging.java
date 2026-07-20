@@ -81,7 +81,7 @@ final class Staging {
     return copied;
   }
 
-  private static void deleteRecursively(Path root) throws IOException {
+  static void deleteRecursively(Path root) throws IOException {
     if (!Files.exists(root)) return;
     try (Stream<Path> walk = Files.walk(root)) {
       for (Path p : walk.sorted(Comparator.reverseOrder()).collect(Collectors.toList())) {
