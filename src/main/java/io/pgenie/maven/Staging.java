@@ -25,15 +25,30 @@ final class Staging {
       deleteRecursively(target);
       Path origin = sourceDir.resolve(dirName);
       if (!Files.isDirectory(origin)) continue;
-      try (Stream<Path> walk = Files.walk(origin)) {
-        for (Path p : walk.collect(Collectors.toList())) {
-          Path dest = target.resolve(origin.relativize(p).toString());
-          if (Files.isDirectory(p)) {
-            Files.createDirectories(dest);
-          } else {
-            Files.createDirectories(dest.getParent());
-            Files.copy(p, dest, StandardCopyOption.REPLACE_EXISTING);
-          }
+      copyTree(origin, target);
+    }
+  }
+
+  /**
+   * Mirrors the compiled Java package tree into the given directory, replacing whatever was
+   * there before. Used to expose only the actual compile source root under {@code
+   * target/generated-sources} — the rest of the staging directory (pom.xml, README, tests,
+   * duplicated SQL/yaml) stays out of that IDE-visible tree.
+   */
+  static void exposeSources(Path javaSourceRoot, Path dest) throws IOException {
+    deleteRecursively(dest);
+    copyTree(javaSourceRoot, dest);
+  }
+
+  private static void copyTree(Path origin, Path target) throws IOException {
+    try (Stream<Path> walk = Files.walk(origin)) {
+      for (Path p : walk.collect(Collectors.toList())) {
+        Path dest = target.resolve(origin.relativize(p).toString());
+        if (Files.isDirectory(p)) {
+          Files.createDirectories(dest);
+        } else {
+          Files.createDirectories(dest.getParent());
+          Files.copy(p, dest, StandardCopyOption.REPLACE_EXISTING);
         }
       }
     }

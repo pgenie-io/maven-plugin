@@ -97,12 +97,18 @@ public final class GenerateMojo extends AbstractMojo {
 
     Path baseDir = project.getBasedir().toPath();
     Path sourceDir = baseDir.resolve(pgnProjectDirectory);
-    // Nested under generated-sources so IDEs (IntelliJ, Eclipse m2e) auto-mark the resulting
-    // artifacts/java/src/main/java as a source root by convention, without executing this Mojo.
-    Path pgenieTarget =
-        Path.of(project.getBuild().getDirectory()).resolve("generated-sources").resolve("pgenie");
-    Path stagingDir = pgenieTarget.resolve("staging");
-    Path digestFile = pgenieTarget.resolve("digest");
+    Path targetDir = Path.of(project.getBuild().getDirectory());
+    // The full pgn project scaffold (pom.xml, README, tests, duplicated SQL/yaml) is staged here,
+    // outside generated-sources, so it doesn't clutter the IDE's generated-sources tree.
+    Path workDir = targetDir.resolve("pgenie");
+    Path stagingDir = workDir.resolve("staging");
+    Path digestFile = workDir.resolve("digest");
+    Path stagedJavaSources = stagingDir.resolve("artifacts/java/src/main/java");
+    // Only the compiled package tree is mirrored here, under generated-sources, so IDEs
+    // (IntelliJ, Eclipse m2e) auto-mark it as a source root by convention even if they import
+    // without ever running this Mojo. addCompileSourceRoot below registers it explicitly too.
+    Path generatedSources =
+        targetDir.resolve("generated-sources").resolve("pgenie").resolve("src/main/java");
 
     String effectiveSpace;
     String effectiveName;
@@ -130,7 +136,8 @@ public final class GenerateMojo extends AbstractMojo {
           !force
               && Files.isRegularFile(digestFile)
               && Files.readString(digestFile).equals(digest)
-              && Files.isDirectory(stagingDir.resolve("artifacts/java/src/main/java"));
+              && Files.isDirectory(stagedJavaSources)
+              && Files.isDirectory(generatedSources);
       if (upToDate) {
         getLog().info("pGenie inputs unchanged; skipping generation (-Dpgenie.force to override)");
         if (databaseUrl != null) {
@@ -149,7 +156,8 @@ public final class GenerateMojo extends AbstractMojo {
           getLog().info("Signature file added/updated: " + pgnProjectDirectory + "/" + sig
               + " — commit it to version control");
         }
-        Files.createDirectories(pgenieTarget);
+        Staging.exposeSources(stagedJavaSources, generatedSources);
+        Files.createDirectories(workDir);
         // Recompute after copy-back: copyBackSignatures may have added/changed files inside
         // sourceDir (the very directory the digest is computed over), so the pre-run digest
         // would never again match on a subsequent, otherwise-unchanged build.
@@ -159,7 +167,7 @@ public final class GenerateMojo extends AbstractMojo {
       throw new MojoExecutionException(e.getMessage(), e);
     }
 
-    attachAndCheck(stagingDir);
+    attachAndCheck(stagingDir, generatedSources);
   }
 
   private Path resolveExecutable() throws MojoExecutionException, IOException {
@@ -197,8 +205,8 @@ public final class GenerateMojo extends AbstractMojo {
     }
   }
 
-  private void attachAndCheck(Path stagingDir) throws MojoExecutionException, MojoFailureException {
-    Path generatedSources = stagingDir.resolve("artifacts/java/src/main/java");
+  private void attachAndCheck(Path stagingDir, Path generatedSources)
+      throws MojoExecutionException, MojoFailureException {
     if (!Files.isDirectory(generatedSources)) {
       throw new MojoExecutionException(
           "Expected generated sources at " + generatedSources + " but pgn produced none");

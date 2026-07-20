@@ -32,7 +32,7 @@ repos, attaching generated tests, injecting dependencies into the consumer's mod
 ## Execution steps
 
 1. **Up-to-date check.** Digest of `src/main/pgenie/**`, the effective plugin
-   configuration, and the baked-in pins is compared against `target/generated-sources/pgenie/digest`.
+   configuration, and the baked-in pins is compared against `target/pgenie/digest`.
    On match, skip everything. `-Dpgenie.force` bypasses. (Caveat documented: with an
    external `--database-url`, server schema drift is invisible to the digest.)
 2. **Binary provisioning.** Download the pinned `pgn` for the detected platform
@@ -42,7 +42,9 @@ repos, attaching generated tests, injecting dependencies into the consumer's mod
    missing libpq (`brew install libpq` / `apt-get install libpq5`) and unsupported
    platforms. Windows path handles `pgn.exe` naming and extraction.
    Maven-Central classifier-artifact distribution is a deferred follow-up (see issues).
-3. **Staging.** Into `target/generated-sources/pgenie/staging/`:
+3. **Staging.** Into `target/pgenie/staging/` — deliberately outside
+   `generated-sources` so the full pgn project scaffold (`pom.xml`, `README`, `src/test/java`,
+   duplicated SQL/yaml) doesn't clutter the IDE's generated-sources tree:
    - synthesize `project1.pgn.yaml` — `space`, `name`, `version` (from
      `${project.version}`, not user-facing), `postgres`, one artifact `java`
      with the gen URL and `genConfig` rendered to YAML;
@@ -56,10 +58,13 @@ repos, attaching generated tests, injecting dependencies into the consumer's mod
 5. **Copy-back.** New or changed `*.sig1.pgn.yaml` under `queries/` and `types/` are
    copied back into `src/main/pgenie/` — the only source-tree mutation. Docs:
    "the build may add signature files; commit them."
-6. **Attach** `target/generated-sources/pgenie/staging/artifacts/java/src/main/java` as a compile
-   source root. The generated `pom.xml` and `src/test/java` are ignored. Nested under
-   `generated-sources` deliberately: IntelliJ (and Eclipse m2e) auto-mark folders there as
-   generated source roots on sync by convention, without needing to execute this Mojo.
+6. **Expose and attach.** Only the compiled package tree,
+   `staging/artifacts/java/src/main/java`, is mirrored into
+   `target/generated-sources/pgenie/src/main/java` and attached as a compile source root.
+   The generated `pom.xml` and `src/test/java` stay in staging and are never copied there.
+   Mirroring under `generated-sources` is deliberate: IntelliJ (and Eclipse m2e) auto-mark
+   folders there as generated source roots on sync by convention, without needing to
+   execute this Mojo; `addCompileSourceRoot` registers it explicitly regardless.
 7. **Dependency check.** Fail with a copy-pasteable `<dependency>` snippet if
    `io.codemine.java.postgresql:jdbc` is absent from the consumer's compile
    dependencies; warn on version mismatch against the generated pom.
